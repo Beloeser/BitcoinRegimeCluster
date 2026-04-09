@@ -1,0 +1,5 @@
+btc_30m.csv
+outputs/
+__pycache__/
+*.pyc
+.env
