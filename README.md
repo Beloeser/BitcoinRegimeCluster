@@ -1,52 +1,52 @@
 # Bitcoin Regime Clustering
 
-Identificação automática de regimes de mercado no BTC/USDT usando dados de 30 minutos da API pública da Binance.
+Automatic identification of market regimes in BTC/USDT using 30-minute candle data from the Binance public API.
 
 ---
 
-## Estrutura
+## Structure
 
 ```
-├── data_collection.py   # coleta paginada da API Binance
-├── features.py          # feature engineering e redução dimensional
-├── clustering.py        # KMeans + mapeamento de regimes
-├── evaluation.py        # métricas e gráficos
-├── main.py              # pipeline principal
+├── data_collection.py   # paginated data collection from Binance API
+├── features.py          # feature engineering and dimensionality reduction
+├── clustering.py        # KMeans + regime mapping
+├── evaluation.py        # metrics and charts
+├── main.py              # main pipeline
 ├── requirements.txt
-└── outputs/             # gráficos e CSVs gerados
+└── outputs/             # generated charts and CSVs
 ```
 
 ---
 
-## Como rodar
+## How to run
 
 ```bash
 pip install -r requirements.txt
 python3 main.py
 ```
 
-Na primeira execução os dados são baixados da Binance e salvos em `btc_30m.csv`. Nas execuções seguintes o CSV é reutilizado. Para forçar nova coleta, apague o `btc_30m.csv`.
+On the first run, data is downloaded from Binance and saved to `btc_30m.csv`. Subsequent runs reuse the cached file. To force a fresh download, delete `btc_30m.csv`.
 
 ---
 
-## Dados
+## Data
 
-- **Par:** BTCUSDT
-- **Intervalo:** 30 minutos
-- **Período:** agosto/2017 → abril/2026
-- **Total de candles:** 151.227
-- **Fonte:** `GET https://api.binance.com/api/v3/klines`
+- **Pair:** BTCUSDT
+- **Interval:** 30 minutes
+- **Period:** August 2017 → April 2026
+- **Total candles:** 151,227
+- **Source:** `GET https://api.binance.com/api/v3/klines`
 
 ---
 
 ## Features
 
-| Feature | Descrição |
+| Feature | Description |
 |---|---|
 | `log_return` | ln(close_t / close_t-1) |
-| `volatility` | desvio padrão rolling(20) do log_return |
+| `volatility` | rolling(20) std of log_return |
 | `amplitude` | (high - low) / close |
-| `volume_norm` | z-score rolling(20) do volume |
+| `volume_norm` | rolling(20) z-score of volume |
 | `momentum` | close_t / close_t-10 - 1 |
 | `ma_ratio` | MA20 / MA50 - 1 |
 | `rsi` | RSI(14) |
@@ -55,48 +55,47 @@ Na primeira execução os dados são baixados da Binance e salvos em `btc_30m.cs
 
 ## Regimes (K=2)
 
-| Regime | Nome | N | Retorno Médio | Ret. Std | Vol. Média |
+| Regime | Name | N | Mean Return | Ret. Std | Mean Vol. |
 |---|---|---|---|---|---|
-| 0 | Alta | 124.447 | +0.000633 | 0.003718 | 0.003646 |
-| 1 | Baixa | 26.780 | -0.002839 | 0.010188 | 0.007596 |
+| 0 | Bull | 124,447 | +0.000633 | 0.003718 | 0.003646 |
+| 1 | Bear | 26,780 | -0.002839 | 0.010188 | 0.007596 |
 
-O regime de **Baixa** concentra os movimentos de maior volatilidade e retornos negativos. O regime de **Alta** cobre a maior parte do tempo com retornos positivos e volatilidade contida.
+The **Bear** regime concentrates the highest volatility and negative returns. The **Bull** regime covers most of the time with positive returns and contained volatility.
 
 ---
 
-## Abordagens comparadas
+## Compared approaches
 
-Quatro versões do dataset são testadas em paralelo:
+Four dataset versions are tested in parallel:
 
-| Abordagem | Descrição |
+| Approach | Description |
 |---|---|
-| `raw` | 7 features padronizadas diretamente |
-| `pca` | Redução para 3 componentes principais |
-| `ica` | Redução para 3 componentes independentes |
-| `pca_ica` | ICA aplicado sobre os componentes do PCA |
+| `raw` | 7 standardized features used directly |
+| `pca` | Reduced to 3 principal components |
+| `ica` | Reduced to 3 independent components |
+| `pca_ica` | ICA applied on top of PCA components |
 
 ---
 
-## Resultados
+## Results
 
-| Dataset | Silhouette ↑ | Calinski-Harabasz ↑ | Davies-Bouldin ↓ | Estabilidade ↑ |
+| Dataset | Silhouette ↑ | Calinski-Harabasz ↑ | Davies-Bouldin ↓ | Stability ↑ |
 |---|---|---|---|---|
 | raw | 0.3637 | 29314.40 | 1.7382 | 0.9924 |
 | **pca** | **0.4460** | **46270.42** | **1.3327** | **0.9943** |
 | ica | 0.3724 | 40234.92 | 1.4979 | 0.9908 |
 | pca_ica | 0.3724 | 40234.92 | 1.4979 | 0.9908 |
 
-PCA vence em todas as métricas. A estabilidade acima de 0.99 indica que cada janela de 24h é dominada por um único regime em mais de 99% dos casos.
+PCA wins across all metrics. Stability above 0.99 means each 24h window is dominated by a single regime in over 99% of cases.
 
 ---
 
-## Gráficos gerados
+## Generated charts
 
-| Arquivo | Descrição |
+| File | Description |
 |---|---|
-| `regimes_over_time.png` | preço colorido por regime nas 4 abordagens |
-| `scatter_2d.png` | projeção PCA 2D dos clusters |
-| `return_vs_volatility.png` | retorno vs volatilidade por regime |
-| `correlation_heatmaps.png` | correlação entre features por regime |
-| `metrics_comparison.png` | comparação das métricas entre abordagens |
-# BitcoinRegimeCluster
+| `regimes_over_time.png` | price colored by regime across all 4 approaches |
+| `scatter_2d.png` | PCA 2D projection of clusters |
+| `return_vs_volatility.png` | return vs volatility colored by regime |
+| `correlation_heatmaps.png` | feature correlation heatmap per regime |
+| `metrics_comparison.png` | metrics comparison across approaches |
